@@ -1,6 +1,9 @@
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Interactivity;
+using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace TicTacToeGUI
 {
@@ -9,11 +12,13 @@ namespace TicTacToeGUI
         private string currentPlayer = "X";
         private string[] board = new string[9];
         private Button[] buttons;
+        private int XScore = 0, OScore = 0, DrawScore = 0;
+        private Stack<int> moveHistory = new Stack<int>();
 
         public MainWindow()
         {
             InitializeComponent();
-            // Initialize button array
+
             buttons = new Button[]
             {
                 this.FindControl<Button>("btn0"),
@@ -35,20 +40,28 @@ namespace TicTacToeGUI
             var btn = sender as Button;
             if (btn == null) return;
 
-            int index = System.Array.IndexOf(buttons, btn);
+            int index = Array.IndexOf(buttons, btn);
             if (board[index] == "")
             {
                 board[index] = currentPlayer;
                 btn.Content = currentPlayer;
+                btn.Foreground = currentPlayer == "X" ? Brushes.Red : Brushes.Blue;
+                moveHistory.Push(index);
 
-                if (CheckWinner())
+                int[] winningLine = CheckWinnerLine();
+                if (winningLine != null)
                 {
+                    HighlightWinner(winningLine);
                     StatusText.Text = $"Player {currentPlayer} Wins!";
+                    if (currentPlayer == "X") XScore++; else OScore++;
+                    UpdateScore();
                     DisableButtons();
                     return;
                 }
                 else if (board.All(b => b != ""))
                 {
+                    DrawScore++;
+                    UpdateScore();
                     StatusText.Text = "It's a Draw!";
                     return;
                 }
@@ -58,7 +71,7 @@ namespace TicTacToeGUI
             }
         }
 
-        private bool CheckWinner()
+        private int[] CheckWinnerLine()
         {
             int[,] winPatterns = new int[,]
             {
@@ -72,10 +85,24 @@ namespace TicTacToeGUI
                 int a = winPatterns[i, 0];
                 int b = winPatterns[i, 1];
                 int c = winPatterns[i, 2];
+
                 if (board[a] != "" && board[a] == board[b] && board[b] == board[c])
-                    return true;
+                    return new int[] { a, b, c };
             }
-            return false;
+            return null;
+        }
+
+        private void HighlightWinner(int[] line)
+        {
+            foreach (var i in line)
+                buttons[i].Background = Brushes.LightGreen;
+        }
+
+        private void UpdateScore()
+        {
+            XScoreText.Text = $"X: {XScore}";
+            OScoreText.Text = $"O: {OScore}";
+            DrawScoreText.Text = $"Draws: {DrawScore}";
         }
 
         private void DisableButtons()
@@ -92,9 +119,11 @@ namespace TicTacToeGUI
             foreach (var btn in buttons)
             {
                 btn.Content = "";
+                btn.Background = Brushes.White;
                 btn.IsEnabled = true;
             }
 
+            moveHistory.Clear();
             currentPlayer = "X";
             StatusText.Text = $"Turn: {currentPlayer}";
         }
@@ -102,6 +131,21 @@ namespace TicTacToeGUI
         private void ResetButton_Click(object? sender, RoutedEventArgs e)
         {
             ResetBoard();
+        }
+
+        private void UndoButton_Click(object? sender, RoutedEventArgs e)
+        {
+            if (moveHistory.Count > 0)
+            {
+                int last = moveHistory.Pop();
+                board[last] = "";
+                buttons[last].Content = "";
+                buttons[last].Background = Brushes.White;
+                buttons[last].IsEnabled = true;
+
+                currentPlayer = currentPlayer == "X" ? "O" : "X";
+                StatusText.Text = $"Turn: {currentPlayer}";
+            }
         }
     }
 }
