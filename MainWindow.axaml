@@ -1,61 +1,111 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="TicTacToeGUI.MainWindow"
-        Title="Tic-Tac-Toe" Width="550" Height="750"
-        Background="#E6E6FA"> 
+        MinHeight="600" MinWidth="500"
+        Height="700" Width="550"
+        Title="🌸 Player Tic Tac Toe 🐾"
+        Background="#F8F8FF">
 
-  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Spacing="15">
+  <Window.Styles>
+    <Style Selector="Button.CellButton">
+      <Setter Property="Background" Value="#E6E6FA"/>
+      <Setter Property="Foreground" Value="#6A5ACD"/>
+      <Setter Property="FontSize" Value="80"/> 
+      <Setter Property="FontWeight" Value="ExtraBold"/>
+      <Setter Property="CornerRadius" Value="15"/>
+      <Setter Property="BorderBrush" Value="#C0B0E0"/>
+      <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+    <Style Selector="Button.CellButton:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#D8BFD8"/>
+    </Style>
 
-    <!-- Scoreboard -->
-    <Border Background="#D9C9F2" CornerRadius="15" Padding="15" Width="400" HorizontalAlignment="Center">
+    <Style Selector="Button.ActionButton">
+      <Setter Property="Background" Value="#FFC0CB"/>
+      <Setter Property="Foreground" Value="#800080"/>
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="CornerRadius" Value="22"/>
+      <Setter Property="BorderBrush" Value="#FF69B4"/>
+      <Setter Property="BorderThickness" Value="3"/>
+      <Setter Property="Margin" Value="0 5 0 5"/>
+    </Style>
+    
+    <Style Selector="Grid.GameBoardGrid Button">
+      <Setter Property="Margin" Value="5"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto, *, Auto"
+        Margin="20">
+    
+    <StackPanel Grid.Row="0" Spacing="15" HorizontalAlignment="Center" Margin="0, 0, 0, 15">
+      
+      <Border Background="#E6E6FA" CornerRadius="15" Padding="15" BoxShadow="0 4 8 #30000000">
+          <TextBlock Name="StatusText"
+                     Text="Loading Player Names..."
+                     FontSize="24"
+                     FontWeight="Bold"
+                     HorizontalAlignment="Center"
+                     Foreground="#483D8B"/>
+      </Border>
+
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="30">
-        <TextBlock Name="XScoreText" Text="X: 0" FontSize="20" FontWeight="Bold" Foreground="#4B0082"/>
-        <TextBlock Name="DrawScoreText" Text="Draws: 0" FontSize="20" FontWeight="Bold" Foreground="#4B0082"/>
-        <TextBlock Name="OScoreText" Text="O: 0" FontSize="20" FontWeight="Bold" Foreground="#FF1493"/>
+        
+        <Border Background="#FFFFFF" Padding="10" CornerRadius="10">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Name="P1NameText" Text="P1 (X) Score:" Foreground="#6A5ACD" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Name="XScoreText" Text="0" Foreground="#6A5ACD" FontSize="18" FontWeight="SemiBold"/>
+          </StackPanel>
+        </Border>
+        
+        <Border Background="#FFFFFF" Padding="10" CornerRadius="10">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Name="P2NameText" Text="P2 (O) Score:" Foreground="#9370DB" FontSize="18" FontWeight="SemiBold"/>
+            <TextBlock Name="OScoreText" Text="0" Foreground="#9370DB" FontSize="18" FontWeight="SemiBold"/>
+          </StackPanel>
+        </Border>
       </StackPanel>
+
+    </StackPanel>
+
+    <Border Grid.Row="1"
+            CornerRadius="25"
+            Background="#DDA0DD" 
+            BoxShadow="0 10 20 #33000000"
+            Margin="0, 10, 0, 10"> 
+
+      <Grid Classes="GameBoardGrid"
+            RowSpacing="5" ColumnSpacing="5"
+            Margin="5">
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+        <Button Name="b0" Grid.Row="0" Grid.Column="0" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b1" Grid.Row="0" Grid.Column="1" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b2" Grid.Row="0" Grid.Column="2" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b3" Grid.Row="1" Grid.Column="0" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b4" Grid.Row="1" Grid.Column="1" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b5" Grid.Row="1" Grid.Column="2" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b6" Grid.Row="2" Grid.Column="0" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b7" Grid.Row="2" Grid.Column="1" Click="Cell_Click" Classes="CellButton"/>
+        <Button Name="b8" Grid.Row="2" Grid.Column="2" Click="Cell_Click" Classes="CellButton"/>
+      </Grid>
     </Border>
 
-    <!-- Status -->
-    <TextBlock Name="StatusText" Text="Turn: X" FontSize="22" FontWeight="Bold" Foreground="#4B0082" HorizontalAlignment="Center"/>
+    <StackPanel Grid.Row="2" Orientation="Horizontal"
+                Spacing="25"
+                HorizontalAlignment="Center"
+                Margin="0, 5, 0, 0">
 
-    <!-- Tic-Tac-Toe Grid -->
-    <Grid Name="BoardGrid" Width="360" Height="360" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+      <Button Content="✨ Next Round 🌸"
+              Classes="ActionButton"
+              Click="Reset_Click"/>
 
-        <!-- Buttons 0-8 -->
-        <Button Name="btn0" Grid.Row="0" Grid.Column="0" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn1" Grid.Row="0" Grid.Column="1" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn2" Grid.Row="0" Grid.Column="2" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn3" Grid.Row="1" Grid.Column="0" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn4" Grid.Row="1" Grid.Column="1" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn5" Grid.Row="1" Grid.Column="2" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn6" Grid.Row="2" Grid.Column="0" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn7" Grid.Row="2" Grid.Column="1" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-        <Button Name="btn8" Grid.Row="2" Grid.Column="2" Background="#E6E6FA" BorderBrush="#B299E6" BorderThickness="2" FontSize="36" Click="Button_Click" ZIndex="1"/>
-    </Grid>
-
-
-    <!-- Controls -->
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15">
-      <Button Name="ResetRoundButton" Content="Reset Round" Width="130" Click="ResetRound_Click" CornerRadius="15" Background="#D9C9F2" Foreground="#4B0082"/>
-      <Button Name="NewMatchButton" Content="New Match" Width="130" Click="NewMatch_Click" CornerRadius="15" Background="#D9C9F2" Foreground="#4B0082"/>
+      <Button Content="Reset Score 🌸"
+              Classes="ActionButton"
+              Click="ResetScore_Click"/>
     </StackPanel>
 
-    <!-- AI Difficulty -->
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0" Spacing="10">
-      <TextBlock Text="AI Difficulty:" VerticalAlignment="Center" Foreground="#4B0082"/>
-      <Slider Name="DifficultySlider" Minimum="1" Maximum="3" Value="1" Width="150"/>
-      <TextBlock Name="DifficultyLabel" Text="Easy" VerticalAlignment="Center" Foreground="#4B0082"/>
-    </StackPanel>
-
-  </StackPanel>
+  </Grid>
 </Window>

@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TicTacToeGUI.NameEntryWindow"
+        Title="Player Names"
+        Height="250" Width="350"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8F8FF">
+
+    <StackPanel Margin="20" Spacing="15" VerticalAlignment="Center">
+        <TextBlock Text="Enter Player Names"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Foreground="#800080"
+                   HorizontalAlignment="Center"/>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Player X (X):" Foreground="#6A5ACD" FontWeight="Bold"/>
+            <TextBox Name="P1NameInput" Text="Player X" Width="300" Foreground="#6A5ACD"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Player O (O):" Foreground="#9370DB" FontWeight="Bold"/>
+            <TextBox Name="P2NameInput" Text="Player O" Width="300" Foreground="#9370DB"/>
+        </StackPanel>
+
+        <Button Content="Start Game"
+                Name="StartButton"
+                Click="StartButton_Click"
+                HorizontalAlignment="Center"
+                Background="#FFC0CB"
+                Foreground="#800080"
+                CornerRadius="15"
+                Padding="20, 5"/>
+    </StackPanel>
+</Window>
