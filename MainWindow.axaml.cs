@@ -1,8 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Threading;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,210 +8,176 @@ namespace TicTacToeGUI
 {
     public partial class MainWindow : Window
     {
-        private bool playerTurn = true;
-        private bool roundOver = false;
+        private bool xTurn = true; 
+        private List<Button> cells;
+        private int xScore = 0;
+        private int oScore = 0;
+        private bool isGameOver = false;
 
-        private int xWins = 0;
-        private int oWins = 0;
-        private int draws = 0;
-        private int[]? winLine;
+        // Static members to store names passed from App.axaml.cs
+        public static string StaticPlayer1Name { get; set; } = "Player X";
+        public static string StaticPlayer2Name { get; set; } = "Player O";
 
-        private List<Button> buttons;
-        private DispatcherTimer pulseTimer;
-        private int pulseIndex = 0;
+        // Player Name variables
+        private readonly string player1Name;
+        private readonly string player2Name;
 
+        // Updated Icons (X and O)
+        private const string X_ICON = "X"; 
+        private const string O_ICON = "O"; 
+        private const string PAW_ICON = "🐾"; 
+
+        // Lavender Color Scheme
+        private readonly SolidColorBrush XForeground = new SolidColorBrush(Color.Parse("#6A5ACD")); // Slate Blue (P1)
+        private readonly SolidColorBrush OForeground = new SolidColorBrush(Color.Parse("#9370DB")); // Medium Purple (P2)
+        private readonly SolidColorBrush StatusForeground = new SolidColorBrush(Color.Parse("#483D8B")); // Dark Slate Blue Status
+        private readonly SolidColorBrush WinBackground = new SolidColorBrush(Color.Parse("#FFD700")); // Gold Win Highlight
+        private readonly SolidColorBrush CellBackground = new SolidColorBrush(Color.Parse("#E6E6FA")); // Lavender
+
+        // ONLY ONE CONSTRUCTOR: Parameterless, required by XAML tooling
         public MainWindow()
         {
             InitializeComponent();
+            
+            // Set final names from the static properties filled by App.axaml.cs
+            player1Name = StaticPlayer1Name;
+            player2Name = StaticPlayer2Name;
 
-            buttons = new List<Button>
+            cells = new List<Button>
             {
-                btn0, btn1, btn2,
-                btn3, btn4, btn5,
-                btn6, btn7, btn8
+                b0!, b1!, b2!, b3!, b4!, b5!, b6!, b7!, b8! 
             };
+            
+            // Set the name display texts
+            P1NameText.Text = $"{player1Name} (X) Score:";
+            P2NameText.Text = $"{player2Name} (O) Score:";
 
-            pulseTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-            pulseTimer.Tick += Pulse;
-
-            DifficultySlider.PropertyChanged += (_, __) =>
-            {
-                DifficultyLabel.Text = DifficultySlider.Value switch
-                {
-                    1 => "Easy",
-                    2 => "Medium",
-                    3 => "Hard",
-                    _ => "Easy"
-                };
-            };
+            UpdateScoreText();
+            StartNewRound();
         }
 
-        private void Button_Click(object? sender, RoutedEventArgs e)
+        private string GetCurrentPlayerName() => xTurn ? player1Name : player2Name;
+        private string GetWinningPlayerName() => !xTurn ? player1Name : player2Name;
+
+        private void Cell_Click(object? sender, RoutedEventArgs e)
         {
-            if (!playerTurn || roundOver) return;
-            var btn = (Button)sender!;
-            if (btn.Content != null) return;
+            var btn = sender as Button;
+            
+            if (btn == null || btn.Content != null || isGameOver)
+                return;
 
-            PlaceSymbol(btn, "X");
-            if (CheckEnd("X")) return;
-
-            playerTurn = false;
-            AITurn();
-        }
-
-        private void AITurn()
-        {
-            int difficulty = (int)DifficultySlider.Value;
-            int move = -1;
-
-            if (difficulty == 1)
+            if (xTurn)
             {
-                var empty = buttons.Select((b, i) => (b, i)).Where(x => x.b.Content == null).Select(x => x.i).ToList();
-                Random rnd = new();
-                move = empty[rnd.Next(empty.Count)];
+                btn.Content = X_ICON; 
+                btn.Foreground = XForeground;
             }
             else
             {
-                move = FindWinningMove("O") ?? FindWinningMove("X") ?? buttons.FindIndex(b => b.Content == null);
+                btn.Content = O_ICON; 
+                btn.Foreground = OForeground;
             }
 
-            PlaceSymbol(buttons[move], "O");
-            CheckEnd("O");
-            playerTurn = true;
+            xTurn = !xTurn;
+            CheckGameStatus();
         }
-
-        private int? FindWinningMove(string s)
+        
+        private void CheckGameStatus()
         {
-            int[,] w =
+            if (CheckWinner())
             {
-                {0,1,2},{3,4,5},{6,7,8},
-                {0,3,6},{1,4,7},{2,5,8},
-                {0,4,8},{2,4,6}
-            };
-            for (int i = 0; i < 8; i++)
-            {
-                var line = new[] { w[i,0], w[i,1], w[i,2] };
-                var marks = line.Select(i => buttons[i].Content?.ToString()).ToList();
-                if (marks.Count(m => m == s) == 2 && marks.Count(m => m == null) == 1)
-                    return line[marks.IndexOf(null)];
+                isGameOver = true;
+                string winnerName = GetWinningPlayerName(); 
+                StatusText.Text = $"🥳 {winnerName} Wins! 🎉";
+                
+                if (!xTurn) xScore++; else oScore++;
+                UpdateScoreText();
+                DisableAllCells();
             }
-            return null;
-        }
-
-        private void PlaceSymbol(Button btn, string s)
-        {
-            btn.Content = s;
-            btn.Foreground = new SolidColorBrush(Color.Parse("#4B0082")); // dark purple for X/O
-            btn.Background = new SolidColorBrush(Color.Parse("#E6E6FA")); // light lavender
-            btn.BorderBrush = new SolidColorBrush(Color.Parse("#B299E6")); // darker lavender border
-            btn.IsEnabled = false;
-        }
-
-
-        private bool CheckEnd(string s)
-        {
-            int[,] w =
+            else if (CheckDraw())
             {
-                {0,1,2},{3,4,5},{6,7,8},
-                {0,3,6},{1,4,7},{2,5,8},
-                {0,4,8},{2,4,6}
+                isGameOver = true;
+                StatusText.Text = $"{PAW_ICON} It's a Draw! {PAW_ICON}";
+                DisableAllCells();
+            }
+            else
+            {
+                string nextPlayerName = GetCurrentPlayerName();
+                StatusText.Text = $"Turn: {PAW_ICON} {nextPlayerName}";
+                StatusText.Foreground = StatusForeground;
+            }
+        }
+
+        private bool CheckWinner()
+        {
+            int[,] wins =
+            {
+                {0,1,2},{3,4,5},{6,7,8}, 
+                {0,3,6},{1,4,7},{2,5,8}, 
+                {0,4,8},{2,4,6}          
             };
 
             for (int i = 0; i < 8; i++)
             {
-                if (buttons[w[i,0]].Content?.ToString() == s &&
-                    buttons[w[i,1]].Content?.ToString() == s &&
-                    buttons[w[i,2]].Content?.ToString() == s)
+                string a = cells[wins[i,0]].Content?.ToString() ?? "";
+                string b = cells[wins[i,1]].Content?.ToString() ?? "";
+                string c = cells[wins[i,2]].Content?.ToString() ?? "";
+
+                if (a != "" && a == b && b == c)
                 {
-                    winLine = new[] { w[i,0], w[i,1], w[i,2] };
-                    StartPulse();
-
-                    roundOver = true;
-                    if (s == "X") xWins++; else oWins++;
-                    UpdateScore();
-                    StatusText.Text = s == "X" ? "You won the round 🎉" : "AI won the round 🤖";
-
-                    HandleMatchEnd();
+                    cells[wins[i, 0]].Background = WinBackground;
+                    cells[wins[i, 1]].Background = WinBackground;
+                    cells[wins[i, 2]].Background = WinBackground;
                     return true;
                 }
             }
-
-            if (buttons.All(b => b.Content != null))
-            {
-                roundOver = true;
-                draws++;
-                StatusText.Text = "Draw 🤝";
-                UpdateScore();
-                HandleMatchEnd();
-                return true;
-            }
-
             return false;
         }
 
-        private void StartPulse()
+        private bool CheckDraw()
         {
-            pulseIndex = 0;
-            pulseTimer.Start();
+            return cells.All(c => c.Content != null);
         }
 
-        private void Pulse(object? sender, EventArgs e)
+        private void Reset_Click(object? sender, RoutedEventArgs e)
         {
-            if (winLine == null) return;
-            var color = pulseIndex % 2 == 0 ? "#B299E6" : "#F2E6FF";
-            foreach (var i in winLine)
-                buttons[i].Background = new SolidColorBrush(Color.Parse(color));
-
-            pulseIndex++;
-            if (pulseIndex > 6) pulseTimer.Stop();
+            StartNewRound();
         }
 
-        private void UpdateScore()
+        private void ResetScore_Click(object? sender, RoutedEventArgs e)
         {
-            XScoreText.Text = $"X: {xWins}";
-            OScoreText.Text = $"O: {oWins}";
-            DrawScoreText.Text = $"Draws: {draws}";
+            xScore = 0;
+            oScore = 0;
+            UpdateScoreText();
+            StartNewRound();
         }
 
-        private void ResetRound_Click(object? sender, RoutedEventArgs e) => ResetRound();
-
-        private void ResetRound()
+        private void StartNewRound()
         {
-            foreach (var b in buttons)
+            foreach (var c in cells)
             {
-                b.Content = null;
-                b.IsEnabled = true;
-                b.Background = new SolidColorBrush(Color.Parse("#F2E6FF"));
-                b.BorderBrush = new SolidColorBrush(Color.Parse("#B299E6"));
+                c.Content = null;
+                c.IsEnabled = true;
+                c.Background = CellBackground; 
             }
-            roundOver = false;
-            playerTurn = true;
-            StatusText.Text = "Turn: X";
-            winLine = null;
 
-            ResetRoundButton.IsEnabled = false;
+            xTurn = true;
+            isGameOver = false;
+            StatusText.Text = $"Turn: {PAW_ICON} {player1Name}";
+            StatusText.Foreground = StatusForeground;
         }
 
-        private void NewMatch_Click(object? sender, RoutedEventArgs e)
+        private void DisableAllCells()
         {
-            xWins = oWins = draws = 0;
-            UpdateScore();
-            ResetRound();
+            foreach (var c in cells)
+            {
+                c.IsEnabled = false;
+            }
         }
 
-        private void HandleMatchEnd()
+        private void UpdateScoreText()
         {
-            if (xWins + oWins + draws >= 3)
-            {
-                StatusText.Text += "\nBest-of-3 finished!";
-                ResetRoundButton.IsEnabled = false;
-                NewMatchButton.IsEnabled = true;
-            }
-            else
-            {
-                ResetRoundButton.IsEnabled = true;
-                NewMatchButton.IsEnabled = false;
-            }
+            XScoreText.Text = xScore.ToString();
+            OScoreText.Text = oScore.ToString();
         }
     }
 }
